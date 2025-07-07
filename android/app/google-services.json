@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "677158890188",
+    "project_id": "medical-ims-6ed83",
+    "storage_bucket": "medical-ims-6ed83.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677158890188:android:cb1b6a4e2587674ee07069",
+        "android_client_info": {
+          "package_name": "com.example.medical_ims"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7wq0441-ImWR_dqZb9YqSTGvVz8mPrn4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
