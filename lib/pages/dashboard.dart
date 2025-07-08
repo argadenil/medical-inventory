@@ -33,6 +33,7 @@ class _DashboardState extends State<Dashboard> {
 
   List<Map<String, String>> inventoryData = [];
   List<Map<String, String>> filteredData = [];
+  bool isLoading = true;
   @override
   void initState() {
     super.initState();
@@ -41,7 +42,6 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Future<void> _initFirebaseAndFetchData() async {
-    await Firebase.initializeApp();
     final db = FirebaseDatabase.instanceFor(
       app: Firebase.app(),
       databaseURL:
@@ -56,16 +56,12 @@ class _DashboardState extends State<Dashboard> {
           .where((item) => item != null)
           .map<Map<String, String>>((item) => Map<String, String>.from(item))
           .toList();
-    } else if (snapshot.exists && snapshot.value is Map) {
-      final Map medicines = snapshot.value as Map;
-      inventoryData = medicines.values
-          .map<Map<String, String>>((item) => Map<String, String>.from(item))
-          .toList();
     } else {
       inventoryData = [];
     }
     setState(() {
       filteredData = List.from(inventoryData);
+      isLoading = false;
     });
   }
 
@@ -86,192 +82,197 @@ class _DashboardState extends State<Dashboard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color.fromRGBO(3, 4, 94, 1),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Dashboard",
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: summaryData.map((data) {
-                return Expanded(
-                  child: Card(
-                    elevation: 8, // More prominent shadow
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 20,
-                        horizontal: 12,
-                      ),
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: (data['color'] as Color)
-                                .withOpacity(0.2),
-                            radius: 35,
-                            child: Icon(
-                              data['icon'] as IconData,
-                              size: 45,
-                              color: data['color'] as Color,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(
-                            data['label'] as String,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            data['value'] as String,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 25,
-                            ),
-                          ),
-                        ],
-                      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator(color: Colors.white))
+          : Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Dashboard",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 30),
-            Row(
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.7,
-                  child: TextField(
-                    onChanged: _filterInventory,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      filled: true,
-                      fillColor: Colors.white,
-                      hintText: 'Search',
-                      border: OutlineInputBorder(
+                  const SizedBox(height: 5),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: summaryData.map((data) {
+                      return Expanded(
+                        child: Card(
+                          elevation: 8, // More prominent shadow
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 20,
+                              horizontal: 12,
+                            ),
+                            child: Column(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: (data['color'] as Color)
+                                      .withOpacity(0.2),
+                                  radius: 35,
+                                  child: Icon(
+                                    data['icon'] as IconData,
+                                    size: 45,
+                                    color: data['color'] as Color,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  data['label'] as String,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  data['value'] as String,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 25,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 30),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.7,
+                        child: TextField(
+                          onChanged: _filterInventory,
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.search),
+                            filled: true,
+                            fillColor: Colors.white,
+                            hintText: 'Search',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  const Text(
+                    "Medicine Inventory",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  // ...existing code...
+                  Expanded(
+                    child: Card(
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            const Text(
-              "Medicine Inventory",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 5),
-            // ...existing code...
-            Expanded(
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                // ...existing code...
-                child: SingleChildScrollView(
-                  child: ExpansionPanelList.radio(
-                    children: filteredData
-                        .asMap()
-                        .entries
-                        .map<ExpansionPanelRadio>((entry) {
-                          final index = entry.key;
-                          final medicine = entry.value;
-                          Icon statusIcon;
-                          switch (medicine['status']) {
-                            case 'In Stock':
-                              statusIcon = const Icon(
-                                Icons.check_circle,
-                                color: Colors.green,
-                                size: 35,
-                              );
-                              break;
-                            case 'Low':
-                              statusIcon = const Icon(
-                                Icons.warning_amber_rounded,
-                                color: Colors.orange,
-                                size: 35,
-                              );
-                              break;
-                            case 'Out of Stock':
-                              statusIcon = const Icon(
-                                Icons.warning_rounded,
-                                color: Colors.red,
-                                size: 35,
-                              );
-                              break;
-                            default:
-                              statusIcon = const Icon(
-                                Icons.info_outline,
-                                color: Colors.grey,
-                                size: 20,
-                              );
-                          }
+                      // ...existing code...
+                      child: SingleChildScrollView(
+                        child: ExpansionPanelList.radio(
+                          children: filteredData
+                              .asMap()
+                              .entries
+                              .map<ExpansionPanelRadio>((entry) {
+                                final index = entry.key;
+                                final medicine = entry.value;
+                                Icon statusIcon;
+                                switch (medicine['status']) {
+                                  case 'In Stock':
+                                    statusIcon = const Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                      size: 35,
+                                    );
+                                    break;
+                                  case 'Low':
+                                    statusIcon = const Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: Colors.orange,
+                                      size: 35,
+                                    );
+                                    break;
+                                  case 'Out of Stock':
+                                    statusIcon = const Icon(
+                                      Icons.warning_rounded,
+                                      color: Colors.red,
+                                      size: 35,
+                                    );
+                                    break;
+                                  default:
+                                    statusIcon = const Icon(
+                                      Icons.info_outline,
+                                      color: Colors.grey,
+                                      size: 20,
+                                    );
+                                }
 
-                          return ExpansionPanelRadio(
-                            value: medicine['name']!,
-                            headerBuilder: (context, isExpanded) => ListTile(
-                              leading: Text(
-                                '${index + 1}',
-                                style: TextStyle(fontSize: 15),
-                              ),
-                              title: Text('${medicine['name']}'),
-                              subtitle: Text(medicine['category']!),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [statusIcon],
-                              ),
-                            ),
-                            body: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment
-                                    .start, // <-- Add this line
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.date_range),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Expiry Date: ${medicine['expiry']}',
+                                return ExpansionPanelRadio(
+                                  value: medicine['name']!,
+                                  headerBuilder: (context, isExpanded) =>
+                                      ListTile(
+                                        leading: Text(
+                                          '${index + 1}',
+                                          style: TextStyle(fontSize: 15),
+                                        ),
+                                        title: Text('${medicine['name']}'),
+                                        subtitle: Text(medicine['category']!),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [statusIcon],
+                                        ),
                                       ),
-                                      SizedBox(width: 10),
-                                      Text('Supplier: ${medicine['supplier']}'),
-                                    ],
+                                  body: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment
+                                          .start, // <-- Add this line
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            const Icon(Icons.date_range),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Expiry Date: ${medicine['expiry']}',
+                                            ),
+                                            SizedBox(width: 10),
+                                            Text(
+                                              'Supplier: ${medicine['supplier']}',
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        })
-                        .toList(),
+                                );
+                              })
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                    // ...existing code... ),
                   ),
-                ),
+                  // ...existing code...],
+                ],
               ),
-              // ...existing code... ),
             ),
-            // ...existing code...],
-          ],
-        ),
-      ),
     );
   }
 }
