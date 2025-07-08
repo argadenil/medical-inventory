@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class Inventory extends StatefulWidget {
   const Inventory({super.key});
@@ -8,40 +10,14 @@ class Inventory extends StatefulWidget {
 }
 
 class _InventoryState extends State<Inventory> {
-  final List<Map<String, dynamic>> inventory = [
-    {
-      "name": "Paracetamol",
-      "category": "Pain Relief",
-      "expiry": "1206-11",
-      "status": "In Stock",
-      "color": Colors.green,
-      "icon": Icons.check_circle,
-    },
-    {
-      "name": "Amoxicillin",
-      "category": "Antibiotic",
-      "expiry": "15",
-      "status": "Low",
-      "color": Colors.orange,
-      "icon": Icons.warning,
-    },
-    {
-      "name": "Cetirizine",
-      "category": "MedsCo",
-      "expiry": "2025-08-20",
-      "status": "Meloebrilis",
-      "color": Colors.blueGrey,
-      "icon": Icons.info_outline,
-    },
-    {
-      "name": "Allergy",
-      "category": "HealthPlus",
-      "expiry": "2025-07-30",
-      "status": "Out of Stock",
-      "color": Colors.red,
-      "icon": Icons.cancel,
-    },
-  ];
+  List<Map<String, String>> inventoryData = [];
+  List<Map<String, String>> filteredData = [];
+  bool isLoading = true;
+  @override
+  void initState() {
+    super.initState();
+    _initFirebaseAndFetchData();
+  }
 
   void _showAddMedicineDialog() {
     String name = '';
@@ -110,13 +86,11 @@ class _InventoryState extends State<Inventory> {
                 }
 
                 setState(() {
-                  inventory.add({
+                  inventoryData.add({
                     "name": name,
                     "category": category,
                     "expiry": expiry,
                     "status": status,
-                    "color": statusColor,
-                    "icon": statusIcon,
                   });
                 });
 
@@ -128,6 +102,30 @@ class _InventoryState extends State<Inventory> {
         );
       },
     );
+  }
+
+  Future<void> _initFirebaseAndFetchData() async {
+    final db = FirebaseDatabase.instanceFor(
+      app: Firebase.app(),
+      databaseURL:
+          'https://medical-ims-6ed83-default-rtdb.asia-southeast1.firebasedatabase.app',
+    );
+    final ref = db.ref();
+    final snapshot = await ref.get();
+    if (snapshot.exists && snapshot.value is List) {
+      final List medicines = snapshot.value as List;
+      inventoryData = medicines
+          .where((item) => item != null)
+          .map<Map<String, String>>((item) => Map<String, String>.from(item))
+          .toList();
+      print('inventoryData.length.  ${inventoryData.length}');
+    } else {
+      inventoryData = [];
+    }
+    setState(() {
+      filteredData = List.from(inventoryData);
+      isLoading = false;
+    });
   }
 
   @override
@@ -232,23 +230,30 @@ class _InventoryState extends State<Inventory> {
                       // Table Rows
                       Expanded(
                         child: ListView.builder(
-                          itemCount: inventory.length,
+                          itemCount: inventoryData.length,
                           itemBuilder: (context, index) {
-                            final item = inventory[index];
+                            final item = inventoryData[index];
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               child: Row(
                                 children: [
-                                  Expanded(child: Text(item["name"])),
-                                  Expanded(child: Text(item["category"])),
-                                  Expanded(child: Text(item["expiry"])),
+                                  Expanded(child: Text(item["name"] ?? "")),
+                                  Expanded(child: Text(item["category"] ?? "")),
+                                  Expanded(child: Text(item["expiry"] ?? "")),
                                   Expanded(
                                     child: Row(
                                       children: [
                                         Icon(
-                                          item["icon"],
+                                          item["icon"] != null
+                                              ? IconData(
+                                                  int.parse(item["icon"]!),
+                                                  fontFamily: 'MaterialIcons',
+                                                )
+                                              : Icons.help_outline,
                                           size: 18,
-                                          color: item["color"],
+                                          color: item["color"] != null
+                                              ? Color(int.parse(item["color"]!))
+                                              : Colors.grey,
                                         ),
                                         const SizedBox(width: 6),
                                       ],
