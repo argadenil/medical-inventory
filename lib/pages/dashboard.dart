@@ -18,7 +18,7 @@ class _DashboardState extends State<Dashboard> {
       'color': Color.fromRGBO(65, 112, 162, 1),
     },
     {
-      'icon': Icons.warning_amber_rounded,
+      'icon': Icons.warning_rounded,
       'label': 'Low Stock',
       'value': '24',
       'color': Colors.orange,
